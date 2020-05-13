@@ -18,7 +18,7 @@ class Experiments:
     
     def get_top_performing_experiment(self):
         '''Returns the top performing experiment'''
-        return get_experiments_sorted_by_accuracy()[-1]
+        return self.get_experiments_sorted_by_accuracy()[-1]
     
     def get_experiments_sorted_by_accuracy(self, reverse=False):
         '''Returns a list of experiments sorted by accuracy'''
