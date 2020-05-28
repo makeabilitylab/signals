@@ -404,9 +404,12 @@ def get_gesture_set_with_str(map_gesture_sets, s):
     '''
     Gets the gesture set containing the str s 
     '''
-    for base_path, gesture_set in map_gesture_sets.items():
-        if s in base_path:
+    for gesture_set_name, gesture_set in map_gesture_sets.items():
+        if s in gesture_set_name:
             return gesture_set
+    
+    print(f"We could not find '{s}' in map_gesture_sets")
+
     return None
 
 def get_gesture_sets_with_str(map_gesture_sets, s):
@@ -424,6 +427,10 @@ def get_gesture_sets_with_str(map_gesture_sets, s):
             for i_str in s:
                 if i_str in base_path:
                     gesture_sets.append(gesture_set)
+
+    if len(gesture_sets) <= 0:
+        print(f"We found no gesture sets with the string '{s}'")
+    
     return gesture_sets
 
 def get_random_gesture_set(map_gesture_sets):
