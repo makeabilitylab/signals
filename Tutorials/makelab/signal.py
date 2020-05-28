@@ -6,9 +6,85 @@ from scipy.spatial import distance
 import librosa
 import random
 
-def create_sine_wave(freq, sampling_rate, total_time_in_secs, return_time = False):
+### SINE AND COSINE GENERATOR FUNCTIONS ###
+
+def create_sine_waves(freqs, sampling_rate, total_time_in_secs = None, return_time = False):
+    '''Creates multiple sine waves corresponding to the freq array, sampling rate, and length
+    
+       Returns a tuple list of (freq, sine_wave) or (freq, (time, sine_wave))
+       depending on whether return_time is True or False
+    '''
+    sine_waves = []
+    for freq in freqs:
+        sine_waves.append((freq, create_sine_wave(freq, sampling_rate, total_time_in_secs, return_time)))
+    return sine_waves
+
+def create_sine_wave_sequence(freqs, sampling_rate, time_per_freq = None, starting_amplitudes = None,
+                             ending_amplitudes = None):
+
+    '''
+    Creates a sine wave sequence at the given frequencies and sampling rate. You can control
+    the time per frequency via time_per_freq and the starting and ending amplitudes of each signal
+    
+    Parameters:
+        freqs (array): array of frequencies
+        sampling_rate (num): sampling rate
+        time_per_freq (float or list): If a float, creates all sine waves of that length (in secs).
+            If an array, takes the time per frequency (in secs). If None, sets all sine waves to length 1 sec.
+        starting_amplitudes (array): List of starting amplitudes for each freq (one by default)
+        ending_amplitudes (array): list of ending amplitudes for each freq (zero by default)
+    '''
+    if starting_amplitudes is None:
+        starting_amplitudes = np.ones(len(freqs))
+
+    if ending_amplitudes is None:
+        ending_amplitudes = np.zeros(len(freqs))
+
+    if time_per_freq is None:
+        time_per_freq = np.ones(len(freqs))
+    elif isinstance(time_per_freq, (list, tuple, np.ndarray)) is False:
+        time_per_freq = np.full(len(freqs), time_per_freq)
+
+    signal_sequence = np.array([])
+    for i, freq in enumerate(freqs):
+        signal = create_sine_wave(freq, sampling_rate, time_per_freq[i])
+        
+        # Currently linear interpolation between start and end amplitudes
+        # But we could expand this later to exponential, etc.
+        amplitudes = np.linspace(starting_amplitudes[i], ending_amplitudes[i], num=len(signal))
+        signal_with_amplitudes = signal * amplitudes
+        signal_sequence = np.concatenate((signal_sequence, signal_with_amplitudes))
+    
+    return signal_sequence
+
+def create_composite_sine_wave(freqs, sampling_rate, total_time_in_secs, amplitudes = None,
+                              use_random_amplitudes = False, return_time = False):
+    '''Creates a composite sine wave with the given frequencies and amplitudes'''
+    
+    if amplitudes is None and use_random_amplitudes is False:
+        amplitudes = np.ones(len(freqs))
+    elif amplitudes is None and use_random_amplitudes is True:
+        amplitudes = np.random.uniform(low = 0.1, high = 1, size=(len(freqs)))
+
+    time = np.arange(total_time_in_secs * sampling_rate) / sampling_rate
+    signal_composite = np.zeros(len(time)) # start with empty array
+    for i, freq in enumerate(freqs):
+        # set random amplitude for each freq (you can change this, of course)
+        signal = amplitudes[i] * create_sine_wave(freq, sampling_rate, total_time_in_secs)
+        signal_composite += signal
+
+    if return_time is False:
+        return signal_composite
+    else:
+        return (time, signal_composite)
+
+def create_sine_wave(freq, sampling_rate, total_time_in_secs = None, return_time = False):
     '''Creates a sine wave with the given frequency, sampling rate, and length'''
     
+    # if the total time in secs is None, then return one period of the wave
+    if total_time_in_secs is None:
+        total_time_in_secs = 1 / freq
+
     # Create an array from 0 to total_time_in_secs * sampling_rate (and then divide by sampling
     # rate to get each time_step)
     time = np.arange(total_time_in_secs * sampling_rate) / sampling_rate
@@ -26,9 +102,13 @@ def create_sine_wave(freq, sampling_rate, total_time_in_secs, return_time = Fals
     else:
         return (time, sine_wave)
 
-def create_cos_wave(freq, sampling_rate, total_time_in_secs, return_time = False):
+def create_cos_wave(freq, sampling_rate, total_time_in_secs = None, return_time = False):
     '''Creates a cos wave with the given frequency, sampling rate, and length'''
     
+     # if the total time in secs is None, then return one period of the wave
+    if total_time_in_secs is None:
+        total_time_in_secs = 1 / freq
+
     # Create an array from 0 to total_time_in_secs * sampling_rate (and then divide by sampling
     # rate to get each time_step)
     time = np.arange(total_time_in_secs * sampling_rate) / sampling_rate
@@ -48,7 +128,11 @@ def get_random_xzoom(signal_length, fraction_of_length):
 
 def map(val, start1, stop1, start2, stop2):
     '''Similar to Processing and Arduino's map function'''
-    return ((val-start1)/(stop1-start1)) * (stop2 - start2) + start2;
+    return ((val-start1)/(stop1-start1)) * (stop2 - start2) + start2
+
+def remap(val, start1, stop1, start2, stop2):
+    '''Similar to Processing and Arduino's map function'''
+    return ((val-start1)/(stop1-start1)) * (stop2 - start2) + start2
 
 ### SIGNAL MANIPULATION FUNCTIONS ###
 
@@ -73,6 +157,15 @@ def shift_array(arr, shift_amount, fill_value = np.nan):
     return result
 
 ### SIGNAL ANALYSIS FUNCTIONS ###
+
+# TODO: update get_top_n_frequency_indices_sorted so that you can specify a min_gap
+#       between top freqs (so if two top freqs are close together, one can be skipped)
+def get_top_n_frequency_indices_sorted(n, freqs, amplitudes):
+    '''Gets the top N frequency indices (sorted)'''
+    ind = np.argpartition(amplitudes, -n)[-n:] # from https://stackoverflow.com/a/23734295
+    ind_sorted_by_coef = ind[np.argsort(-amplitudes[ind])] # reverse sort indices
+
+    return ind_sorted_by_coef
 
 def calc_zero_crossings(s, min_gap = None):
     '''Returns the number of zero crossings in the signal s
@@ -157,8 +250,8 @@ def plot_signal_to_axes(ax, s, sampling_rate, title=None, signal_label=None, mar
     signal_label: the label of the signal
     '''
     ax.plot(s, label=signal_label, marker=marker, alpha=0.9)
-    ax.set(xlabel="samples")
-    
+    ax.set(xlabel="Samples")
+    ax.set(ylabel="Amplitude")
     if signal_label is not None:
         ax.legend()
 
@@ -179,27 +272,34 @@ def plot_signal_to_axes(ax, s, sampling_rate, title=None, signal_label=None, mar
     num_samples_shown = ax.get_xlim()[1] - ax.get_xlim()[0]
     time_shown = num_samples_shown / sampling_rate
     if time_shown < 1:
-        ax2.set_xlabel("time (ms)")
+        ax2.set_xlabel("Time (ms)")
         # format with 'g' causes insignificant trailing zeroes to be removed
         # https://stackoverflow.com/a/2440708 but also uses scientific notation, oh well!
         ax2_tick_labels = [f"{x * 1000:.1f}" for x in ax2_tick_labels]
     else:
-        ax2.set_xlabel("time (secs)")
+        ax2.set_xlabel("Time (secs)")
         ax2_tick_labels = ['{:.2f}'.format(x) for x in ax2_tick_labels]
 
     ax2.set_xticks(ax_ticks)
     ax2.set_xticklabels(ax2_tick_labels)
-    
-def plot_signal(s, sampling_rate, quantization_bits = 16, title = None, xlim_zoom = None, highlight_zoom_area = True):
-    '''Plots audio data with the given sampling_rate, quantization level, and xlim_zoom'''
-    
+
+def plot_audio(s, sampling_rate, quantization_bits = 16, title = None, xlim_zoom = None, highlight_zoom_area = True):
+    ''' Calls plot_Signal but accepts quantization_bits '''
     plot_title = title
     if plot_title is None:
         plot_title = f"{quantization_bits}-bit, {sampling_rate} Hz audio"
+    
+    return plot_signal(s, sampling_rate, title = title, xlim_zoom = xlim_zoom, highlight_zoom_area = highlight_zoom_area)
+
+def plot_signal(s, sampling_rate, title = None, xlim_zoom = None, highlight_zoom_area = True):
+    '''Plots time-series data with the given sampling_rate and xlim_zoom'''
+    
+    plot_title = title
+    if plot_title is None:
+        plot_title = f"Sampling rate: {sampling_rate} Hz"
 
     if xlim_zoom == None:
         fig, axes = plt.subplots(1, 1, figsize=(15,6))
-        
         
         plot_signal_to_axes(axes, s, sampling_rate, plot_title)
         return (fig, axes)
@@ -215,12 +315,14 @@ def plot_signal(s, sampling_rate, quantization_bits = 16, title = None, xlim_zoo
             axes[0].axvspan(xlim_zoom[0], xlim_zoom[1], color='orange', alpha=0.3)
             
         axes[1].set_xlim(xlim_zoom)
-        plot_signal_to_axes(axes[1], s, sampling_rate, plot_title + ' zoomed')
+        zoom_title = f"Signal zoomed: {int(xlim_zoom[0])} - {int(xlim_zoom[1])} samples"
+        plot_signal_to_axes(axes[1], s, sampling_rate, zoom_title)
+        axes[1].set_ylabel(None)
         fig.tight_layout()
         return (fig, axes)
 
 def plot_sampling_demonstration(total_time_in_secs, real_world_freqs, real_world_continuous_speed = 10000, resample_factor = 200):
-    '''Used to demonstrate digital sampling'''
+    '''Used to demonstrate digital sampling and uses stem plots to show where samples taken'''
     num_charts = len(real_world_freqs)
     fig_height = num_charts * 3.25
     fig, axes = plt.subplots(num_charts, 1, figsize=(15, fig_height))
@@ -297,7 +399,7 @@ def plot_signal_and_magnitude_spectrum(t, s, sampling_rate, title = None, xlim_z
     return (fig, axes)
 
 import matplotlib.ticker as ticker
-def plot_spectrogram_to_axes(ax, s, sampling_rate, title=None, signal_label=None, 
+def plot_spectrogram_to_axes(ax, s, sampling_rate, title=None, 
                              marker=None, custom_axes = True):
     '''Plots a spectrogram wave s with the given sampling rate
     
@@ -306,49 +408,51 @@ def plot_spectrogram_to_axes(ax, s, sampling_rate, title=None, signal_label=None
     s: numpy array
     sampling_rate: sampling rate of s
     title: chart title
-    signal_label: the label of the signal
     '''
 
     specgram_return_data = ax.specgram(s, Fs=sampling_rate)
-    if signal_label is not None:
-        ax.legend()
 
     # we use y=1.14 to make room for the secondary x-axis
     # see: https://stackoverflow.com/questions/12750355/python-matplotlib-figure-title-overlaps-axes-label-when-using-twiny
     if title is not None:
         ax.set_title(title, y=1.2)
 
+    ax.set_ylabel("Frequency")
+
     # add in a secondary x-axis to draw the x ticks as time (rather than samples)
     if custom_axes:
-        ax.set(xlabel="samples")
+        ax.set(xlabel="Samples")
         ax_xtick_labels = np.array(ax.get_xticks()) * sampling_rate
         ax_xtick_labels_strs = [f"{int(xtick_label)}" for xtick_label in ax_xtick_labels]
         ax.set_xticklabels(ax_xtick_labels_strs)
 
         ax2 = ax.twiny()
         ax2.set_xlim(ax.get_xlim())
-        ax2.set_xlabel("time (secs)")
+        ax2.set_xlabel("Time (secs)")
         ax2_tick_labels = ax_xtick_labels / sampling_rate
         ax2_tick_labels_strs = [f"{xtick_label:.1f}s" for xtick_label in ax2_tick_labels]
         ax2.set_xticks(ax.get_xticks())
         ax2.set_xticklabels(ax2_tick_labels_strs)
     return specgram_return_data
     
-def plot_spectrogram(audio_data, sampling_rate, quantization_bits, xlim_zoom = None, highlight_zoom_area = True):
-    '''Plots audio data with the given sampling_Rate, quantization level, and xlim_zoom'''
+def plot_spectrogram(s, sampling_rate, title = None, xlim_zoom = None, highlight_zoom_area = True):
+    '''Plots signal with the given sampling_Rate, quantization level, and xlim_zoom'''
     fig, axes = plt.subplots(1, 2, figsize=(15,4), gridspec_kw={'width_ratios': [2, 1]})
-    plot_title = f"{quantization_bits}-bit, {sampling_rate} Hz audio"
-    specgram_return_data0 = plot_spectrogram_to_axes(axes[0], audio_data, sampling_rate, plot_title)
+    
+    if title is None:
+        title = f"{len(s) * sampling_rate} sec Signal with {sampling_rate} Hz"
+    
+    specgram_return_data0 = plot_spectrogram_to_axes(axes[0], s, sampling_rate, title)
     
     if(xlim_zoom == None):
-        max_length = len(audio_data)
+        max_length = len(s)
         length = int(max_length * 0.1)
         random_start = random.randint(0, max_length - length)
         xlim_zoom = (random_start, random_start + length)
       
     axes[1].set_xlim(xlim_zoom)
     #axes[1].set_xlim(12000, 14000)
-    specgram_return_data1 = plot_spectrogram_to_axes(axes[1], audio_data, sampling_rate, plot_title + ' zoomed', custom_axes = False)
+    specgram_return_data1 = plot_spectrogram_to_axes(axes[1], s, sampling_rate, title + ' (Zoomed)', custom_axes = False)
     
     zoom_x1 = xlim_zoom[0] / sampling_rate
     zoom_x2 = xlim_zoom[1] / sampling_rate
@@ -359,11 +463,11 @@ def plot_spectrogram(audio_data, sampling_rate, quantization_bits, xlim_zoom = N
     ax2.set_xticks(axes[1].get_xticks())
     ax2_tick_labels_strs = [f"{xtick_label:.1f}s" for xtick_label in axes[1].get_xticks()]
     ax2.set_xticklabels(ax2_tick_labels_strs)
-    ax2.set_xlabel("time (secs)")
+    ax2.set_xlabel("Time (secs)")
     
     ax_xtick_labels = np.array(axes[1].get_xticks()) * sampling_rate
     ax2_tick_labels_strs = [f"{int(xtick_label)}" for xtick_label in ax_xtick_labels]
-    axes[1].set(xlabel="samples")
+    axes[1].set(xlabel="Samples")
     axes[1].set_xticklabels(ax2_tick_labels_strs)
     
     if highlight_zoom_area:
@@ -372,27 +476,23 @@ def plot_spectrogram(audio_data, sampling_rate, quantization_bits, xlim_zoom = N
         axes[0].axvline(x = zoom_x2, linewidth=2, color='r', alpha=0.8, linestyle='-.')
     
     fig.tight_layout()
-    return (fig, axes)
+    return (fig, axes, specgram_return_data0, specgram_return_data1)
 
-def remap(val, start1, stop1, start2, stop2):
-    '''Similar to Processing and Arduino's map function'''
-    return ((val-start1)/(stop1-start1)) * (stop2 - start2) + start2;
-
-def plot_signal_and_spectrogram(audio_data, sampling_rate, quantization_bits, xlim_zoom = None, highlight_zoom_area = True):
+def plot_signal_and_spectrogram(s, sampling_rate, quantization_bits, xlim_zoom = None, highlight_zoom_area = True):
     '''Plot waveforms and spectrograms together'''
     fig = plt.figure(figsize=(15, 9))
     spec = fig.add_gridspec(ncols = 2, nrows = 2, width_ratios = [2, 1], height_ratios = [1, 1])
     plot_title = f"{quantization_bits}-bit, {sampling_rate} Hz audio"
     
     ax_waveform1 = plt.subplot(spec[0, 0])
-    ax_waveform1.set_xlim(0, len(audio_data))
+    ax_waveform1.set_xlim(0, len(s))
     ax_waveform2 = plt.subplot(spec[0, 1], sharey = ax_waveform1)
 
     ax_spectrogram1 = plt.subplot(spec[1, 0])
     ax_spectrogram2 = plt.subplot(spec[1, 1])
 
-    plot_signal_to_axes(ax_waveform1, audio_data, sampling_rate, plot_title)
-    specgram_return_data = plot_spectrogram_to_axes(ax_spectrogram1, audio_data, sampling_rate, plot_title)
+    plot_signal_to_axes(ax_waveform1, s, sampling_rate, plot_title)
+    specgram_return_data = plot_spectrogram_to_axes(ax_spectrogram1, s, sampling_rate, plot_title)
     #print(len(specgram_return_data[2]))
     
     #print(ax_waveform1.get_xlim())
@@ -400,7 +500,7 @@ def plot_signal_and_spectrogram(audio_data, sampling_rate, quantization_bits, xl
     waveform_xrange = ax_waveform1.get_xlim()[1] - ax_waveform1.get_xlim()[0]
 
     ax_waveform2.set_xlim(xlim_zoom)
-    plot_signal_to_axes(ax_waveform2, audio_data, sampling_rate, plot_title + ' zoomed')
+    plot_signal_to_axes(ax_waveform2, s, sampling_rate, plot_title + ' zoomed')
     
     zoom_x1 = remap(xlim_zoom[0], ax_waveform1.get_xlim()[0], ax_waveform1.get_xlim()[1], 
                     ax_spectrogram1.get_xlim()[0], ax_spectrogram1.get_xlim()[1])
@@ -409,7 +509,7 @@ def plot_signal_and_spectrogram(audio_data, sampling_rate, quantization_bits, xl
     
     #print(ax_spectrogram2.get_xlim(), zoom_x1, zoom_x2)
     ax_spectrogram2.set_xlim(zoom_x1, zoom_x2) # this won't make a difference
-    plot_spectrogram_to_axes(ax_spectrogram2, audio_data, sampling_rate, plot_title, 
+    plot_spectrogram_to_axes(ax_spectrogram2, s, sampling_rate, plot_title, 
                              custom_axes = False)
     ax_spectrogram2.set_xlim(zoom_x1, zoom_x2) # but this one seems to work
      
@@ -418,11 +518,11 @@ def plot_signal_and_spectrogram(audio_data, sampling_rate, quantization_bits, xl
     ax2.set_xticks(ax_spectrogram2.get_xticks())
     ax2_tick_labels_strs = [f"{xtick_label:.2f}s" for xtick_label in ax_spectrogram2.get_xticks()]
     ax2.set_xticklabels(ax2_tick_labels_strs)
-    ax2.set_xlabel("time (secs)")
+    ax2.set_xlabel("Time (secs)")
     
     ax_xtick_labels = np.array(ax_spectrogram2.get_xticks()) * sampling_rate
     ax2_tick_labels_strs = [f"{int(xtick_label)}" for xtick_label in ax_xtick_labels]
-    ax_spectrogram2.set(xlabel="samples")
+    ax_spectrogram2.set(xlabel="Samples")
     ax_spectrogram2.set_xticks(ax_spectrogram2.get_xticks())
     ax_spectrogram2.set_xticklabels(ax2_tick_labels_strs)
     
