@@ -126,6 +126,13 @@ class GestureSet:
     '''
     Container for a single set of gestures and trials
     '''
+
+    DEFAULT_GESTURE_NAMES = set(['At Rest', 'Backhand Tennis', 'Baseball Throw', 
+                          'Custom', 'Forehand Tennis', "Midair 'S'", 
+                          "Midair Clockwise 'O'", "Midair Counter-clockwise 'O'", 
+                          "Midair Zorro 'Z'", 'Shake', 'Underhand Bowling'])
+    
+    GESTURE_NAMES_WITHOUT_CUSTOM = None
     
     def __init__(self, gesture_log_path):
         '''
@@ -136,6 +143,9 @@ class GestureSet:
         '''
         self.path = gesture_log_path
         self.name = self.get_base_path() # do not change the name, it's used as an dict key
+
+        self.GESTURE_NAMES_WITHOUT_CUSTOM = set(self.DEFAULT_GESTURE_NAMES)
+        self.GESTURE_NAMES_WITHOUT_CUSTOM.remove('Custom')
         
     def load(self):
         '''Loads the gesture trials.'''
@@ -297,48 +307,7 @@ class GestureSet:
     def get_trials_for_gesture(self, gesture_name):
         '''Returns trials for the given gesture name'''
         return self.map_gestures_to_trials[gesture_name]
-    
-    # Creates an aggregate signal based on *all* trials for this gesture
-    # There are *tons* of methods to create an aggregate signal. This one
-    # is super basic: simply tries to align the signals and then takes the mean
-    # Note: function currently assumes all trials are the same length
-    # Would need to update to handle different sized signals
-    # TODO: consider moving this out into a signals part of notebook
-    # (to keep GestureSet just as a container class)
-    def create_aggregate_signal(self, gesture_name, signal_var_name):
-        trials = self.get_trials_for_gesture(gesture_name)
-        aggregate_signal = None
-        trial_signals = []
-        trial_signals_original = []
-        first_trial = None
-            
-        for i in range(len(trials)):
-            if i == 0:
-                first_trial = trials[i]
-                trial_signal = getattr(first_trial.accel, signal_var_name)
-                trial_signal_mod = np.copy(trial_signal)
-
-                trial_signals.append(trial_signal_mod)
-                trial_signals_original.append(trial_signal)
-
-                aggregate_signal = trial_signal_mod
-            else:
-
-                trial1 = first_trial # used for alignment
-                trial2 = trials[i]
-
-                trial1_signal = getattr(trial1.accel, signal_var_name)
-                trial2_signal = getattr(trial2.accel, signal_var_name) 
-                trial_signals_original.append(trial2_signal)
-
-                trial2_signal_shifted = get_aligned_signal_cutoff_and_pad(trial2_signal, trial1_signal)
-                trial_signals.append(trial2_signal_shifted)
-                aggregate_signal += trial2_signal_shifted
         
-        mean_signal = aggregate_signal / len(trial_signals) 
-        return mean_signal
-
-    
     def get_min_num_of_trials(self):
         '''
         Returns the minimum number of trials across all gestures (just in case we accidentally recorded a 
@@ -378,6 +347,16 @@ class GestureSet:
     def get_gesture_names_sorted(self):
         '''Returns a sorted list of gesture names'''
         return sorted(self.map_gestures_to_trials.keys())
+
+    def get_gesture_names_filtered(self, filter_names):
+        '''Returns the gesture names except for those in the filter_names list'''
+        filter_names = set(filter_names)
+        gesture_names = list()
+        for gesture_name in self.map_gestures_to_trials.keys():
+            if gesture_name not in filter_names:
+                gesture_names.append(gesture_names)
+        
+        return sorted(gesture_names)
     
     def __str__(self):
          return "'{}' : {} gestures and {} total trials".format(self.path, self.get_num_gestures(), 
@@ -454,3 +433,18 @@ def get_all_gesture_sets(map_gesture_sets):
     Gets all of the gesture sets
     '''
     return map_gesture_sets.values()
+
+def get_all_gesture_sets_except(map_gesture_sets, filter):
+    '''
+    Gets all of the gesture sets except filter. Filter can be a string
+    or a list of strings
+    '''
+    if isinstance(filter, str):
+        filter = [filter]
+    
+    gesture_sets = []
+    for gesture_set_name, gesture_set in map_gesture_sets.items():
+        if filter.count(gesture_set_name) <= 0:
+            gesture_sets.append(gesture_set)
+
+    return gesture_sets
