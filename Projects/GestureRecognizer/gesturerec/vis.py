@@ -26,3 +26,4 @@ def plot_confusion_matrix(cm, classes, title, normalize=False, cmap=plt.cm.Blues
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+    plt.show()
