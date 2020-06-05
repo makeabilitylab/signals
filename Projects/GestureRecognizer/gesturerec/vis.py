@@ -1,6 +1,34 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 import itertools
+from IPython.display import display_html
+
+map_marker_to_desc = {
+    ".":"point",
+    ",":"pixel",
+    "o":"circle",
+    "v":"triangle_down",
+    "^":"triangle_up",
+    "<":"triangle_left",
+    ">":"triangle_right",
+    "1":"tri_down",
+    "2":"tri_up",
+    "3":"tri_left",
+    "4":"tri_right",
+    "8":"octagon",
+    "s":"square",
+    "p":"pentagon",
+    "*":"star",
+    "h":"hexagon1",
+    "H":"hexagon2",
+    "+":"plus",
+    "D":"diamond",
+    "d":"thin_diamond",
+    "|":"vline",
+    "_":"hline"
+}
+
+plot_markers = ['o','v','^','<','>','s','p','P','*','h','X','D','d','|','_',0,1,2,3,4,5,6,7,8,9,10,'1','2','3','4',',']
 
 def plot_confusion_matrix(cm, classes, title, normalize=False, cmap=plt.cm.Blues, figsize=None):
     if normalize:
@@ -149,3 +177,16 @@ def plot_signals_aligned(gesture_set, signal_var_names = ['x', 'y', 'z'], title_
                 axes[row][col].legend()           
 
     fig.tight_layout(pad=2)
+
+def display_tables_side_by_side(df1, df2, n = None, df1_caption = "Caption table 1", df2_caption = "Caption table 2"):
+    '''Displays the two tables side-by-side'''
+    
+    if n is not None:
+        df1 = df1.head(n)
+        df2 = df2.head(n)
+    
+    # Solution from https://stackoverflow.com/a/50899244
+    df1_styler = df1.style.set_table_attributes("style='display:inline; margin:10px'").set_caption(df1_caption)
+    df2_styler = df2.style.set_table_attributes("style='display:inline'").set_caption(df2_caption)
+
+    display_html(df1_styler._repr_html_()+df2_styler._repr_html_(), raw=True)
