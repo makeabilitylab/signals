@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "makeabilitylab-signals"
+version = "2.0.0"
+description = "Helper packages (makelab, gesturerec) for the Makeability Lab signals & ML notebooks used in the Physical Computing interactive textbook."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Jon E. Froehlich and the Makeability Lab" }]
+keywords = ["signal-processing", "accelerometer", "gesture-recognition", "hci", "ubicomp", "education"]
+
+# Runtime dependencies (unpinned lower bounds). For a fully pinned, reproducible
+# environment use requirements.txt or environment.yml instead.
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "matplotlib>=3.8",
+    "pandas>=2.1",
+    "scikit-learn>=1.4",
+    "seaborn>=0.13",
+    "librosa>=0.10",
+]
+
+[project.optional-dependencies]
+# Everything needed to launch and run the notebooks interactively.
+notebooks = [
+    "jupyterlab>=4.2",
+    "notebook>=7.2",
+    "ipykernel>=6.29",
+    "ipympl>=0.9",
+]
+
+[project.urls]
+Homepage = "https://makeabilitylab.github.io/physcomp/signals/"
+Repository = "https://github.com/makeabilitylab/signals"
+
+# The two helper packages live next to the notebooks that use them. We map them
+# to top-level import names so `import makelab` / `import gesturerec` work from a
+# fresh clone after `pip install -e .`, with no sys.path hacks and without moving
+# the source out of its lesson folder.
+[tool.setuptools]
+packages = ["makelab", "gesturerec"]
+
+[tool.setuptools.package-dir]
+makelab = "Tutorials/makelab"
+gesturerec = "Projects/GestureRecognizer/gesturerec"

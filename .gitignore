@@ -1,26 +1,31 @@
-Projects/GestureRecognizer/GestureLogsTemp
-Tutorials/.ipynb_checkpoints/IntroToPython-checkpoint.ipynb
-Projects/StepTracker/.ipynb_checkpoints/StepTracker-checkpoint.ipynb
-Tutorials/.ipynb_checkpoints/IntroToMatplotlib-checkpoint.ipynb
-Tutorials/.ipynb_checkpoints/IntroToNumPy-checkpoint.ipynb
-Tutorials/.ipynb_checkpoints/MyFirstNotebook-checkpoint.ipynb
-Tutorials/.ipynb_checkpoints/IntroToSignalProcessing-checkpoint.ipynb
-Projects/StepTracker/.ipynb_checkpoints/StepTracker-Exercises-checkpoint.ipynb
-*.pyc
-Projects/GestureRecognizer/.ipynb_checkpoints/GestureRecognizer-ShapeBased-checkpoint.ipynb
-Projects/GestureRecognizer/.ipynb_checkpoints/GestureRecognizer-ShapeBased-Private-checkpoint.ipynb
-Projects/GestureRecognizer/.ipynb_checkpoints/GestureRecognizer-ShapeBased-checkpoint.ipynb
-Projects/GestureRecognizer/.ipynb_checkpoints/GestureRecognizer-ShapeBased-checkpoint.ipynb
-Tutorials/makelab/.vscode/.ropeproject/config.py
-Tutorials/makelab/.vscode/.ropeproject/objectdb
-Tutorials/.ipynb_checkpoints/Signals - Quantization and Sampling-checkpoint.ipynb
-Projects/GestureRecognizer/GestureRecognizer-FeatureBased-Private.ipynb
-Projects/GestureRecognizer/.ipynb_checkpoints/GestureRecognizer-FeatureBased-Private-checkpoint.ipynb
-Tutorials/.ipynb_checkpoints/Signals - Frequency Analysis-checkpoint.ipynb
-Projects/GestureRecognizer/.ipynb_checkpoints/GestureRecognizer-FeatureBased-NanDu-checkpoint.ipynb
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+.conda/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+
+# --- Editor / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Course-private / instructor-only notebooks (solution keys) ---
+# These are deliberately NOT published; only the exercise versions ship.
+*-Private.ipynb
 Projects/GestureRecognizer/GestureRecognizer-FeatureBased-NanDu.ipynb
-Projects/GestureRecognizer/.ipynb_checkpoints/GestureRecognizer-FeatureBased-checkpoint.ipynb
-Projects/GestureRecognizer/.ipynb_checkpoints/GestureRecognizer-ShapeBased-checkpoint.ipynb
-Tutorials/.ipynb_checkpoints/Signals - Comparing Signals-checkpoint.ipynb
-Projects/GestureRecognizer/.ipynb_checkpoints/Feature Selection and Hyperparameter Tuning-checkpoint.ipynb
-Projects/GestureRecognizer/.ipynb_checkpoints/GestureRecognizer-ShapeBased-checkpoint.ipynb
+
+# --- Scratch / temp data ---
+Projects/GestureRecognizer/GestureLogsTemp/

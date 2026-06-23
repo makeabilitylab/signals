@@ -1,0 +1,27 @@
+# Pinned, reproducible environment for the makeabilitylab/signals notebooks.
+# Target interpreter: Python 3.12 (works on 3.11+).
+#
+#   python -m venv .venv
+#   .venv/Scripts/activate        # Windows;  source .venv/bin/activate on macOS/Linux
+#   pip install -r requirements.txt
+#
+# The trailing "-e ." installs the local makelab + gesturerec helper packages
+# (see pyproject.toml) so the notebooks import them from anywhere.
+
+# --- scientific / DSP / ML stack ---
+numpy==2.4.6
+scipy==1.18.0
+matplotlib==3.11.0
+pandas==3.0.3
+scikit-learn==1.9.0
+seaborn==0.13.2
+librosa==0.11.0
+
+# --- notebook tooling ---
+jupyterlab==4.6.0
+notebook==7.6.0
+ipykernel==7.3.0
+ipympl==0.10.0
+
+# --- local helper packages (makelab, gesturerec) ---
+-e .
