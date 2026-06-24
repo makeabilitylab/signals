@@ -3,11 +3,10 @@
 Report back to the `physcomp` textbook side (tracking issue **#116**). Living document;
 updated as the lesson-by-lesson pass proceeds.
 
-**Status:** Pass 1 (repo infrastructure), Pass 2 (lesson-by-lesson modernization), and the
-Colab-bootstrap sweep are **complete**. **Pass 3 (quality/pedagogy review) is COMPLETE** —
-all 10 notebooks + both helper packages reviewed for correctness-of-explanations, readability,
-code commenting/docstrings, and notebook-design best practices. See the **Pass 3** section at
-the bottom of this file. **Date:** 2026-06-23.
+**Status:** Pass 1 (repo infrastructure), Pass 2 (lesson-by-lesson modernization), the
+Colab-bootstrap sweep, and Pass 3 (quality/pedagogy review) are **complete**.
+**Pass 4 (accessibility, engagement/`ipywidgets` sliders, and textbook-style lesson openers)
+is COMPLETE** — see the **Pass 4** section at the bottom of this file. **Date:** 2026-06-24.
 
 ---
 
@@ -406,3 +405,73 @@ variadic helper (three clearly-named functions read better); did *not* alter Gri
 **Commits:** one per notebook/group on `signals-v2-refresh`
 (`5647575` IntroToPython … `e825472` helper packages), preceded by `63a7c62`
 (cosmetic notebook-metadata normalization, committed standalone to keep Pass 3 diffs clean).
+
+---
+
+## Pass 4 — Accessibility, engagement & up-front content (2026-06-24)
+
+Closes the two issue-#116 dimensions Passes 1–3 left under-served — **Accessibility**
+and **Presentation/engagement** — plus textbook-style lesson openers. Branch
+`signals-v2-pass4` (off `master`); one commit per notebook/group.
+
+**Scope decisions (with Jon):** do all of accessibility + engagement + operational
+close-out; **keep the three intro tutorials as reference** (no new intro exercises);
+**yes** to `ipywidgets` live sliders; lesson openers use a **blockquote note block**
+matching the v2.0 textbook (`> **In this lesson, you will learn:**`).
+
+### Accessibility
+- **Alt text on every image.** Added descriptive `alt`/`![…]` text to all images that
+  lacked it (Matplotlib anatomy, Wikipedia FFT + sampling + aliasing figures, the SVM
+  hyperplane, the cross-correlation animation, …) and upgraded weak alt text
+  ("Image of three-part split" → a real description). A repo-wide audit now reports
+  **0 images missing/empty alt**. Markdown-only — no output churn.
+- **Colorblind-safe colors (surgical).** Audited all `color=`/`cmap=` usage: the only
+  genuine color-vision failure was the **blue + green** Correct/Incorrect bar pair in
+  ShapeBased's `plot_bar_graph_average_scores_by_gesture` → recolored to the **Okabe-Ito
+  blue + orange** pair. Everything else is single-hue (lone red spectra/annotations,
+  lone blue bars) or red/blue, all already distinguishable, so they were left as-is to
+  avoid churning megabytes of plots for no real benefit. Added a documented, reusable
+  `COLORBLIND_SAFE` (Okabe-Ito) palette to `gesturerec/vis.py`.
+
+### Engagement — live `ipywidgets` sliders
+Added `@interact` sliders **additively** (the existing step-by-step walkthroughs are
+themselves pedagogy and were kept). Pinned `ipywidgets==8.1.*` in `requirements.txt` /
+`environment.yml`.
+- **Quantization & Sampling:** a quantization **bit-depth** slider (re-quantize → replot →
+  replay audio) and an **aliasing frequency** slider (fixed 50 Hz sampling).
+- **Comparing Signals:** a cross-correlation **shift** slider ("slide b until it lines up
+  with a; the dot product peaks at the best alignment").
+- **Frequency Analysis:** a **frequency → magnitude-spectrum** slider after the worked 10 Hz
+  FFT example (time- and frequency-domain views side by side).
+
+**Static-render contract for `@interact` (important):** an `interact` cell stores its plot
+in *widget state*, not the normal output bundle, so stripping widget state (needed for clean
+GitHub/nbviewer rendering) would leave it blank. Fix: each slider cell **also calls its
+function once at a representative default**, committing a normal static png (+ audio) as the
+fallback; then `interact` is wired up for live use. Widget-view + nb-level `metadata.widgets`
+are stripped (png-only), and a guarded Colab block
+(`if 'google.colab' … enable_custom_widget_manager()`) precedes the first widget. Verified by
+full headless `nbconvert --execute` (exit 0; only intentional `raises-exception` cells error),
+then committed **minimal-diff** (pristine outputs on original cells; fresh widget-stripped
+output only on the new slider cells).
+
+### Up-front content (learning objectives + TOC)
+Every lesson now opens with the **"In this lesson, you will learn:"** blockquote (restyling
+the Pass-3 "What you'll learn" lists, or replacing redundant inline objectives). Longer
+lessons also got an inline **Contents** TOC (anchor links to the existing headings) — the
+live apps auto-generate a TOC sidebar, but static renders don't, so this helps GitHub/Colab
+readers. **Correctness fix found along the way:** Comparing Signals' "## Dependencies" still
+told students to `pip install fastdtw`, but Pass 2 migrated it to `librosa.sequence.dtw` —
+corrected the prose.
+
+### Operational
+- **Colab badge validation** can only be confirmed after this branch merges to `master`
+  (the bootstrap clones `master`). Deferred to post-merge — validate each of the 10 badges
+  then.
+- **Media-slimming** of the ~14 MB gesture notebooks: still optional/deferred.
+
+**Commits:** `8b730ea` (foundation: ipywidgets pin + palette) → `97aa365` (ShapeBased),
+one per notebook/group on `signals-v2-pass4`.
+**Note:** an unrelated stale-stat refresh to FeatureBased (scikit-learn star/commit counts)
+appeared in the working tree from outside this pass and was reverted — flag for Jon if a
+stats refresh is wanted.
