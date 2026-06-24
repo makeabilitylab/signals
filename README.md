@@ -72,6 +72,25 @@ import makelab.signal          # used by the Tutorials notebooks
 import gesturerec.data         # used by the GestureRecognizer notebooks
 ```
 
+## Tests
+
+The helper packages have unit tests and the notebooks have headless "does it still
+execute" smoke tests. None of this lives inside the notebooks. Install the test extras
+and run:
+
+```bash
+pip install -e ".[test]"
+
+pytest tests/                                  # fast unit tests for makelab + gesturerec
+pytest --nbmake Tutorials/ Projects/StepTracker/      # execute the fast notebooks
+pytest --nbmake Projects/GestureRecognizer/           # execute the (slow) gesture notebooks
+```
+
+`nbmake` executes each notebook in its own directory and fails on any uncaught error
+(intentional teaching errors are tagged `raises-exception` and allowed). CI runs the
+unit tests + fast notebooks on every push/PR, and the slow gesture notebooks nightly —
+see [`.github/workflows/`](.github/workflows/).
+
 ## Repository layout
 
 ```
@@ -85,6 +104,8 @@ import gesturerec.data         # used by the GestureRecognizer notebooks
 │       ├── gesturerec/           # data structures + experiment scaffolding (package)
 │       ├── GestureLogs/          # per-participant gesture training data
 │       └── ADXL335GestureLogs/   # alternate-sensor gesture data
+├── tests/                        # pytest unit tests for makelab + gesturerec
+├── .github/workflows/            # CI: unit + notebook smoke tests
 ├── pyproject.toml                # packaging for makelab + gesturerec
 ├── requirements.txt              # pinned pip environment
 └── environment.yml               # pinned conda environment

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Educational materials for applied signal processing and time-series classification in HCI / ubiquitous computing (a University of Washington course, part of the Makeability Lab "physcomp" curriculum). The artifacts are **Jupyter notebooks** backed by small supporting Python packages. There is no build, no test suite, no CI — work is done interactively in notebooks.
+Educational materials for applied signal processing and time-series classification in HCI / ubiquitous computing (a University of Washington course, part of the Makeability Lab "physcomp" curriculum). The artifacts are **Jupyter notebooks** backed by small supporting Python packages. There is no build; work is done interactively in notebooks. Tests do exist (added after the v2 modernization): pytest unit tests for the helper packages plus `nbmake` headless notebook smoke tests, run in GitHub Actions CI — see the **Testing** section below. The tests live entirely outside the `.ipynb` files (nothing was added inside the notebooks).
 
 Top-level layout:
 - `Tutorials/` — standalone teaching notebooks (NumPy, Matplotlib, Python, and signals: sampling/quantization, frequency analysis, comparing signals). Supported by the `makelab/` package.
@@ -28,6 +28,15 @@ import makelab.signal
 Pinned dependencies live in `requirements.txt` / `environment.yml`: NumPy, SciPy, scikit-learn, pandas, Matplotlib, seaborn, librosa, JupyterLab. The `.venv/` and a registered `signals` Jupyter kernel are local-only (gitignored).
 
 Notebook files contain non-ASCII characters (arrows, curly quotes). When parsing a `.ipynb` with a script, open as UTF-8 and run Python with `PYTHONUTF8=1` — the default Windows cp1252 codec will raise `UnicodeDecodeError`.
+
+## Testing
+
+Install the test stack with `pip install -e ".[test]"` (pytest + nbmake + pytest-xdist). Two layers, both **outside** the notebooks:
+
+- **Unit tests** (`tests/`): pure-function tests for the helper packages — `makelab.signal`, `gesturerec.signalproc`/`utility`/`data`/`experiments`. Run with `pytest tests/`. `tests/fixtures/TestGestures/` is a tiny synthetic gesture corpus (3 trial CSVs + a `*_fulldatastream_*` exclusion file) so the `data.py` parser tests don't depend on the large real `GestureLogs/`. It deliberately includes a `Midair Zorro _Z__*.csv` file to exercise the Windows double-underscore filename quirk.
+- **Notebook smoke tests** (`nbmake`): `pytest --nbmake <paths>` executes notebooks headless and fails on any uncaught error. Intentional teaching errors are already tagged `raises-exception` (notebooks 2 and 5) and are honored — no notebook edits needed. nbmake runs each notebook in its own dir, so the CWD-relative data loads work.
+
+`[tool.pytest.ini_options].testpaths = ["tests"]` keeps a bare `pytest` fast and notebook-free; the notebook sweeps are invoked explicitly by path. CI (`.github/workflows/`) runs units + the fast notebooks (Tutorials + StepTracker) on every push/PR, and the slow gesture notebooks nightly + on-demand. If you add a helper function, add a unit test; if a dependency bump breaks a notebook, the nbmake job is what catches it (this automates the manual Pass 2–4 "Restart & Run All" sweeps).
 
 ## gesturerec architecture (Projects/GestureRecognizer)
 

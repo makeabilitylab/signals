@@ -475,3 +475,44 @@ one per notebook/group on `signals-v2-pass4`.
 **Note:** an unrelated stale-stat refresh to FeatureBased (scikit-learn star/commit counts)
 appeared in the working tree from outside this pass and was reverted — flag for Jon if a
 stats refresh is wanted.
+
+---
+
+## Pass 5 — Test infrastructure (2026-06-24)
+
+Tracking issue **#8**. The Pass 2–4 "does it run" verification was done by *manually*
+running each notebook headless; this pass automates that and adds real unit coverage for
+the helper packages. **Branch `signals-v2-tests` (off `master`). Zero changes inside the
+notebooks** — all test code lives in `tests/` + `.github/workflows/`.
+
+**Decisions (with Jon):** both layers (unit + notebook smoke); GitHub Actions CI; tiered
+notebook execution (fast on PR, heavy gesture notebooks nightly); **execute-only** notebook
+checks via **nbmake** (not output-diffing — random amplitudes / `random` xzoom / timing make
+strict output comparison flaky).
+
+**Added**
+- **Unit tests (`tests/`, pytest):** `test_makelab_signal.py` (wave gen, `shift_array`,
+  `calc_zero_crossings`, `map`/`remap`, top-N indices), `test_gesturerec_signalproc.py`
+  (`compute_fft` half-spectrum + peak bin + scaling, `get_top_n_frequency_peaks`),
+  `test_gesturerec_utility.py` (the `fulldatastream` exclusion guard, `extract_gesture_name`,
+  `path_leaf`, subdirs), `test_gesturerec_data.py` (`SensorData` mag/rate + int64 cast, `Trial`
+  CSV parse, `GestureSet.load` ordering **and the Windows `__` double-underscore quirk**),
+  `test_gesturerec_experiments.py` (`TrialClassificationResult` n-best sort + `is_correct`,
+  via stub trials). **26 tests, green locally.** Tiny synthetic fixture corpus under
+  `tests/fixtures/TestGestures/` (avoids depending on the large real `GestureLogs/`).
+  - *Caught a real contract detail while writing them:* `create_sine_wave(return_time=True)`
+    returns `(time, sine_wave)` — order matters.
+- **nbmake smoke tests:** verified locally that nbmake honors the `raises-exception` tags
+  (NB2, NB5) and executes notebooks in their own dir (CWD-relative `./Logs` loads work).
+- **`pyproject.toml`:** `[project.optional-dependencies].test` (pytest, nbmake, pytest-xdist,
+  ipykernel) + `[tool.pytest.ini_options].testpaths = ["tests"]` (keeps bare `pytest` fast;
+  notebook sweeps invoked explicitly by path).
+- **CI:** `.github/workflows/ci.yml` (push/PR → `unit` job + `notebooks-fast` job over
+  Tutorials + StepTracker) and `notebooks-nightly.yml` (`schedule` + `workflow_dispatch` →
+  the slow GestureRecognizer notebooks). Both install pinned `requirements.txt` + `.[test]`
+  on Python 3.12 and `libsndfile1` for librosa.
+- **Docs:** updated `CLAUDE.md` ("no test suite, no CI" line + a Testing section) and
+  `README.md` (Testing section + layout).
+
+**Still to validate post-push:** the GitHub Actions runs themselves (Linux + pinned stack) —
+CI can only be confirmed green after the branch lands and a PR triggers it.

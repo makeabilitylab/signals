@@ -1,0 +1,30 @@
+name: Notebooks (nightly heavy)
+
+# The GestureRecognizer notebooks are slow (k-fold cross-validation over the full
+# GestureLogs corpus) and produce large outputs, so they are not run on every PR.
+# Instead they run nightly and on-demand to catch dependency drift over time.
+on:
+  schedule:
+    - cron: "0 8 * * *" # 08:00 UTC daily
+  workflow_dispatch: # manual "Run workflow" button
+
+jobs:
+  notebooks-heavy:
+    name: Execute gesture notebooks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install audio system lib (librosa/soundfile)
+        run: sudo apt-get update && sudo apt-get install -y libsndfile1
+      - name: Install pinned env + test extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e ".[test]"
+      - name: Execute gesture notebooks
+        run: pytest --nbmake --nbmake-timeout=1800 -n auto Projects/GestureRecognizer/
