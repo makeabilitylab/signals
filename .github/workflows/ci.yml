@@ -46,5 +46,14 @@ jobs:
       # nbmake executes each notebook in its own directory, so the repo-relative
       # data loads (./Logs, data/audio/...) resolve. Intentional error cells are
       # tagged `raises-exception` in the notebooks and are honored automatically.
+      #
+      # Notes on the flags:
+      #   --nbmake-timeout=1800  The Frequency Analysis tutorial has a brute-force
+      #     "DFT by correlation" demo over an 11 kHz audio chord (~2 min even on a
+      #     fast machine). On a slow/contended shared runner it can creep past the
+      #     old 900 s cap, so we give it generous headroom.
+      #   -n 2  Cap xdist at two workers. Oversubscribing a shared runner makes the
+      #     CPU-bound DFT cells slower (closer to the timeout), so we trade a little
+      #     parallelism for reliability.
       - name: Execute fast notebooks (Tutorials + StepTracker)
-        run: pytest --nbmake --nbmake-timeout=900 -n auto Tutorials/ Projects/StepTracker/
+        run: pytest --nbmake --nbmake-timeout=1800 -n 2 Tutorials/ Projects/StepTracker/
