@@ -58,7 +58,13 @@ code-complete**. Remaining: the Colab-bootstrap sweep for NB4–10 (NB7 also pen
       %pip install -q -e signals
       os.chdir('signals/<lesson folder>')   # e.g. Tutorials  or  Projects/StepTracker
   ```
-  **Status: not started** (begins after NB8–10 code work).
+  **Status: ✅ done (2026-06-23).** Added a guarded markdown+code bootstrap (idempotent clone +
+  `pip install -e signals` + `os.chdir` into the lesson folder) before the first code cell of all
+  8 data/helper notebooks: NB4/5/6 (→ `Tutorials`), NB7 Exercises **and** WithExampleSolution
+  (→ `Projects/StepTracker`), NB8/9/10 (→ `Projects/GestureRecognizer`). Inserted as no-output
+  cells (no re-exec needed); verified locally as a clean no-op (the `if 'google.colab'` guard is
+  False off-Colab). **Still to validate post-push:** the actual Colab launch (the clone pulls from
+  GitHub `master`, so it only works once this branch is merged) — confirm each badge end-to-end then.
 - **Not yet verifiable:** badges can only be confirmed to actually launch *after* these
   commits are pushed to `master` on GitHub. Flagging so we verify post-push, not assume.
 
