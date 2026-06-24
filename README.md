@@ -88,7 +88,8 @@ pytest --nbmake Projects/GestureRecognizer/           # execute the (slow) gestu
 
 `nbmake` executes each notebook in its own directory and fails on any uncaught error
 (intentional teaching errors are tagged `raises-exception` and allowed). CI runs the
-unit tests + fast notebooks on every push/PR, and the slow gesture notebooks nightly —
+unit tests + fast notebooks on every push/PR, and the slow gesture notebooks only when
+a change touches them (plus a monthly canary and on-demand) —
 see [`.github/workflows/`](.github/workflows/).
 
 ## Repository layout

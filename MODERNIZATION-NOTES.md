@@ -486,9 +486,10 @@ the helper packages. **Branch `signals-v2-tests` (off `master`). Zero changes in
 notebooks** — all test code lives in `tests/` + `.github/workflows/`.
 
 **Decisions (with Jon):** both layers (unit + notebook smoke); GitHub Actions CI; tiered
-notebook execution (fast on PR, heavy gesture notebooks nightly); **execute-only** notebook
-checks via **nbmake** (not output-diffing — random amplitudes / `random` xzoom / timing make
-strict output comparison flaky).
+notebook execution (fast notebooks on every PR; heavy gesture notebooks only when a relevant
+change is made — path-filtered — plus a monthly drift canary, since the top-level deps are
+pinned so a nightly rerun adds nothing); **execute-only** notebook checks via **nbmake** (not
+output-diffing — random amplitudes / `random` xzoom / timing make strict output comparison flaky).
 
 **Added**
 - **Unit tests (`tests/`, pytest):** `test_makelab_signal.py` (wave gen, `shift_array`,
@@ -508,9 +509,10 @@ strict output comparison flaky).
   ipykernel) + `[tool.pytest.ini_options].testpaths = ["tests"]` (keeps bare `pytest` fast;
   notebook sweeps invoked explicitly by path).
 - **CI:** `.github/workflows/ci.yml` (push/PR → `unit` job + `notebooks-fast` job over
-  Tutorials + StepTracker) and `notebooks-nightly.yml` (`schedule` + `workflow_dispatch` →
-  the slow GestureRecognizer notebooks). Both install pinned `requirements.txt` + `.[test]`
-  on Python 3.12 and `libsndfile1` for librosa.
+  Tutorials + StepTracker) and `notebooks-heavy.yml` (the slow GestureRecognizer notebooks,
+  triggered by a `paths`-filtered push/PR on `Projects/GestureRecognizer/**` or the deps,
+  plus a monthly `schedule` canary and `workflow_dispatch`). Both install pinned
+  `requirements.txt` + `.[test]` on Python 3.12 and `libsndfile1` for librosa.
 - **Docs:** updated `CLAUDE.md` ("no test suite, no CI" line + a Testing section) and
   `README.md` (Testing section + layout).
 
