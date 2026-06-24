@@ -1,3 +1,6 @@
+"""Shared signal-processing primitives (FFT and frequency-peak extraction) used by
+the gesture notebooks.
+"""
 import numpy as np 
 import scipy as sp
 from scipy import signal

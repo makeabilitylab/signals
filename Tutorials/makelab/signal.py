@@ -1,3 +1,6 @@
+"""Signal generation and analysis helpers (sine/cosine generators, FFT, distance
+metrics, and plotting) for the Tutorials notebooks.
+"""
 import matplotlib.pyplot as plt # matplot lib is the premiere plotting lib for Python: https://matplotlib.org/
 import numpy as np # numpy is the premiere signal handling library for Python: http://www.numpy.org/
 import scipy as sp # for signal processing
@@ -351,6 +354,7 @@ def plot_sampling_demonstration(total_time_in_secs, real_world_freqs, real_world
 
 #### FREQUENCY VISUALIZATIONS ####
 def plot_signal_and_magnitude_spectrum(t, s, sampling_rate, title = None, xlim_zoom_in_secs = None):
+    '''Plots a signal in the time domain alongside its magnitude (frequency) spectrum.'''
     # Plot the time domain
     ax_main_time = None
     ax_zoom_time = None
