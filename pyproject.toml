@@ -32,6 +32,15 @@ notebooks = [
     "ipykernel>=6.29",
     "ipympl>=0.9",
 ]
+# Test stack: pytest for the helper-package unit tests, nbmake for headless
+# "does every notebook still execute" smoke tests, pytest-xdist to run them in
+# parallel. Install with: pip install -e ".[test]"
+test = [
+    "pytest>=8",
+    "nbmake>=1.5",
+    "pytest-xdist>=3.6",
+    "ipykernel>=6.29",  # nbmake needs a kernel to execute the notebooks
+]
 
 [project.urls]
 Homepage = "https://makeabilitylab.github.io/physcomp/signals/"
@@ -47,3 +56,9 @@ packages = ["makelab", "gesturerec"]
 [tool.setuptools.package-dir]
 makelab = "Tutorials/makelab"
 gesturerec = "Projects/GestureRecognizer/gesturerec"
+
+# Unit tests live in tests/. The notebook smoke tests are run explicitly by path
+# (e.g. `pytest --nbmake Tutorials/`), so testpaths intentionally lists only tests/
+# to keep a bare `pytest` fast and notebook-free.
+[tool.pytest.ini_options]
+testpaths = ["tests"]

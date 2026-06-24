@@ -1,0 +1,50 @@
+name: CI
+
+# Runs on every PR and on pushes to master. The heavy gesture notebooks are
+# NOT run here (they are slow + data-heavy) -- see notebooks-nightly.yml.
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  unit:
+    name: Unit tests (helper packages)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install pinned env + test extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e ".[test]"
+      - name: Run pytest
+        run: pytest tests/ -v
+
+  notebooks-fast:
+    name: Notebook smoke tests (fast tier)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install audio system lib (librosa/soundfile)
+        run: sudo apt-get update && sudo apt-get install -y libsndfile1
+      - name: Install pinned env + test extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e ".[test]"
+      # nbmake executes each notebook in its own directory, so the repo-relative
+      # data loads (./Logs, data/audio/...) resolve. Intentional error cells are
+      # tagged `raises-exception` in the notebooks and are honored automatically.
+      - name: Execute fast notebooks (Tutorials + StepTracker)
+        run: pytest --nbmake --nbmake-timeout=900 -n auto Tutorials/ Projects/StepTracker/

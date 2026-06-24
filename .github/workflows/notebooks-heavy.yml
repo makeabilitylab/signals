@@ -1,0 +1,53 @@
+name: Notebooks (heavy gesture)
+
+# The GestureRecognizer notebooks are slow (k-fold cross-validation over the full
+# GestureLogs corpus) and produce large outputs, so they are NOT run on every push.
+# Triggers:
+#   - PRs / pushes to master that touch the gesture notebooks, the gesturerec package,
+#     its data, or the pinned deps (the paths filter below) -- i.e. only when a change
+#     could actually affect these notebooks;
+#   - a monthly cron, purely as a drift canary for unpinned transitive deps / system
+#     libs (the top-level stack is pinned, so day-to-day reruns add nothing);
+#   - manual "Run workflow" (workflow_dispatch).
+# Note: paths filters apply only to push/pull_request; schedule + workflow_dispatch
+# always run.
+on:
+  push:
+    branches: [master]
+    paths:
+      - "Projects/GestureRecognizer/**"
+      - "requirements.txt"
+      - "environment.yml"
+      - "pyproject.toml"
+      - ".github/workflows/notebooks-heavy.yml"
+  pull_request:
+    paths:
+      - "Projects/GestureRecognizer/**"
+      - "requirements.txt"
+      - "environment.yml"
+      - "pyproject.toml"
+      - ".github/workflows/notebooks-heavy.yml"
+  schedule:
+    - cron: "0 8 1 * *" # 08:00 UTC on the 1st of each month
+  workflow_dispatch: # manual "Run workflow" button
+
+jobs:
+  notebooks-heavy:
+    name: Execute gesture notebooks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install audio system lib (librosa/soundfile)
+        run: sudo apt-get update && sudo apt-get install -y libsndfile1
+      - name: Install pinned env + test extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e ".[test]"
+      - name: Execute gesture notebooks
+        run: pytest --nbmake --nbmake-timeout=1800 -n auto Projects/GestureRecognizer/
