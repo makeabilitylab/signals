@@ -9,8 +9,8 @@ Educational materials for applied signal processing and time-series classificati
 Top-level layout:
 - `Tutorials/` — standalone teaching notebooks (NumPy, Matplotlib, Python, and signals: sampling/quantization, frequency analysis, comparing signals). Supported by the `makelab/` package.
 - `Projects/GestureRecognizer/` — accelerometer gesture classification. The most substantial project; supported by the `gesturerec/` package.
-- `Projects/StepTracker/` — step-counting from accelerometer data (exercise + example-solution notebooks).
-- Many notebooks have a `*-Private.ipynb`, `*-Exercises.ipynb` / `*-WithExampleSolution.ipynb` split: the public/exercise version has cells for students to fill in; the private/solution version is the instructor answer key. `*-Private.ipynb` files are gitignored.
+- `Projects/StepTracker/` — step-counting from accelerometer data (a single teaching notebook, `StepTracker-Exercises.ipynb`, that keeps the exercise prompts and shows worked "Example solution" cells).
+- Per issue #6, the published notebooks are now **complete teaching artifacts**: each keeps its exercise prompt / "your turn" framing but adds a clearly-labeled `### Example solution` (markdown heading + worked code) immediately below, so the notebook runs top-to-bottom and serves as both lesson and answer key. New graded assignments are authored separately. (Historically there was an `*-Exercises.ipynb` / `*-WithExampleSolution.ipynb` / `*-Private.ipynb` split; the StepTracker pair has been consolidated, and `*-Private.ipynb` files remain gitignored.)
 
 ## Running
 
