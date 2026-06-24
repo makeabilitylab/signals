@@ -3,12 +3,11 @@
 Report back to the `physcomp` textbook side (tracking issue **#116**). Living document;
 updated as the lesson-by-lesson pass proceeds.
 
-**Status:** Pass 1 (repo infrastructure) complete. Pass 2 (lesson-by-lesson) in progress
-— notebooks 1 (IntroToPython), 2 (IntroToNumPy), 3 (IntroToMatplotlib), 4 (Quantization &
-Sampling), 5 (Comparing Signals), 6 (Frequency Analysis) done; 7 (StepTracker) code-complete;
-8 (GestureRec ShapeBased), 9 (GestureRec FeatureBased), 10 (Feature Selection) done — **all 10
-code-complete**. Remaining: the Colab-bootstrap sweep for NB4–10 (NB7 also pending it).
-**Date:** 2026-06-23.
+**Status:** Pass 1 (repo infrastructure), Pass 2 (lesson-by-lesson modernization), and the
+Colab-bootstrap sweep are **complete**. **Pass 3 (quality/pedagogy review) is COMPLETE** —
+all 10 notebooks + both helper packages reviewed for correctness-of-explanations, readability,
+code commenting/docstrings, and notebook-design best practices. See the **Pass 3** section at
+the bottom of this file. **Date:** 2026-06-23.
 
 ---
 
@@ -335,3 +334,75 @@ diffs reviewable and repo size flat. (For the small tutorial notebooks 1–3 a f
   %matplotlib widget
   ```
   ✅ Implemented in NB 3. **TODO: apply the same block to NB 9** when it's modernized.
+
+---
+
+## Pass 3 — Quality / Pedagogy review (2026-06-23)
+
+A deeper, lesson-by-lesson pass *beyond* "does it run": correctness of **explanations**
+(not just code), readability/prose, code commenting + docstrings, and notebook-design best
+practices (learning objectives, clean heading hierarchy, no instructor leftovers). Calibrated
+to "polish + crisp additions, no bloat." Each notebook verified headless on the 3.12 venv and
+committed separately. Most edits are **source-only** (preserving existing outputs); the one
+exception re-executed because a real bug was fixed.
+
+**Cross-cutting themes**
+- **Built-in auto-TOC:** replaced stale `toc2`-extension advice (ShapeBased) — JupyterLab /
+  Notebook 7 / Colab all auto-generate a table of contents from markdown headings. Fixed
+  `#`→`###` heading skips (NB4/5/6: `# Main imports` → `## Main imports`) so that auto-TOC
+  renders cleanly.
+- **Removed instructor leftovers:** "Jon Sandbox / Outline / Notes" + visible all-done `# TODO`
+  checklists (NB4 Quantization, NB6 Frequency, NB9 FeatureBased, NB10 FeatureSelection) and a
+  dead `# Sandbox` block (NB5). Kept the *student-facing* sandbox in NB8 (explicitly "for you
+  to play").
+- **Learning objectives:** added a crisp "What you'll learn" list to the tutorials that lacked
+  one (NB1–6, both StepTrackers). The gesture notebooks already had "Your TODOs"/overview goals.
+- **Stale links refreshed:** numpy-1.12/1.18 and matplotlib-2.0.2/3.1.1/3.2.1 pinned doc links →
+  `/stable/`; dead `docs.scipy.org/doc/numpy` → `numpy.org/doc/stable`; removed matplotlib
+  `usage.html` (deleted upstream); fixed the anatomy.png image URL.
+- **Import hygiene:** dropped unused imports (`random` in NB2/5/6; `from scipy import signal`
+  in NB4); standardized the numpy import comment ("numerical/array library").
+
+**Real bugs found & fixed (correctness, not just style)**
+- **StepTracker-WithExampleSolution:** `NameError` — the pairing filter used
+  `max_distance_between_peaks` but its definition was commented out. Restored it; the Solution
+  now runs end-to-end (Pass 2 had only headless-verified the Exercises). Re-executed in place.
+- **IntroToPython:** two Python-2 leftovers in teaching comments — `type(...)` prints
+  `<class '...'>`, not `<type '...'>`, in Python 3.
+- **IntroToNumPy:** wrong comment — `np.eye(4)` is a 4×4 (not 4×3) identity matrix.
+- **IntroToMatplotlib:** discouraged `import matplotlib.pylab as plt` → `matplotlib.pyplot`;
+  removed a confusing custom-marker demo that abused a list-comprehension for side effects.
+- **FeatureBased:** `plot_feature_3d` z-axis defaulted to "Feature 2" and its docstring said
+  "two…2-dimensional" (copy-paste from `plot_feature_2d`).
+- **gesturerec/vis.py:** `plot_signals_aligned` used `math` and `shift_array`, neither imported
+  or defined in the module (latent `NameError`). Added `import math` + a documented
+  `shift_array` helper.
+
+**Structural / de-duplication (Jon-approved scope)**
+- **ShapeBased:** dropped the inline `plot_confusion_matrix` (a verbatim copy of
+  `gesturerec.vis.plot_confusion_matrix`) and delegated to the shared helper.
+- **Comparing Signals:** removed ~40 lines of dead code (the never-called
+  `plot_signals_with_alignment`, superseded by `compare_and_plot_signals_with_alignment`).
+- **Helper packages:** added module docstrings to every module; rewrote `utility.py` comments
+  as docstrings; documented the public functions that lacked docstrings
+  (`vis.plot_confusion_matrix`, `gesturestream.load`,
+  `makelab.signal.plot_signal_and_magnitude_spectrum`, `makelab.audio.convert_to_mono`).
+
+**Pedagogy deepened (crisp, no bloat)**
+- ShapeBased: explained *why* DTW (warps the time axis to align gestures at different
+  speeds/offsets) vs. point-by-point Euclidean; window-size guidance for the mean filter.
+- FeatureBased: Nyquist-limit note on the "top frequency" feature; "why stratified k-fold"
+  (imbalanced data); "StandardScaler vs MinMaxScaler — when to use which".
+- FeatureSelection: feature-reduction trade-off caveat (cutting too far *lowers* accuracy);
+  "GridSearchCV vs RandomizedSearchCV"; flagged that a polynomial-kernel `degree` is normally
+  small (2–5).
+- StepTracker: a "The approach" rationale for the Solution's smooth→find_peaks→filter pipeline.
+
+**Deliberately NOT done** (judgment calls, flagged): did *not* over-comment the IntroToPython
+quicksort (its prose sells it as concise); did *not* collapse `plot_feature_1d/2d/3d` into one
+variadic helper (three clearly-named functions read better); did *not* alter GridSearch
+`param_grid` values (avoids churning the results narrative — flagged via comment instead).
+
+**Commits:** one per notebook/group on `signals-v2-refresh`
+(`5647575` IntroToPython … `e825472` helper packages), preceded by `63a7c62`
+(cosmetic notebook-metadata normalization, committed standalone to keep Pass 3 diffs clean).
