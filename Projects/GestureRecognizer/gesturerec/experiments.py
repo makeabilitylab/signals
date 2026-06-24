@@ -1,3 +1,6 @@
+"""Experiment bookkeeping: TrialClassificationResult, ClassificationResults, and
+Experiments for scoring and comparing classification runs.
+"""
 # Classification experiment bookkeeping classes
 from scipy.spatial import distance
 from sklearn.metrics import confusion_matrix

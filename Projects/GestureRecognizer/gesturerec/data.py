@@ -1,3 +1,6 @@
+"""Core data structures for gesture recognition: SensorData, Trial, and GestureSet,
+plus module-level helpers for loading gesture sets from disk.
+"""
 # This cell includes the major classes used in our classification analyses
 # import matplotlib.pyplot as plt # needed for plotting
 import numpy as np # numpy is primary library for numeric array (and matrix) handling

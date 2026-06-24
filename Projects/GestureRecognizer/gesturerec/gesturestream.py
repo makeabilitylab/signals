@@ -1,3 +1,6 @@
+"""Support for the continuous full-data-stream recordings (GestureStream) and the
+Events segmented from them, for offline segmentation work.
+"""
 import os
 import numpy as np 
 from gesturerec.data import SensorData
@@ -24,6 +27,7 @@ class GestureStream:
         self.name = self.__get_base_path() # do not change the name, it's used as an dict key
     
     def load(self):
+        '''Loads and parses the full continuous sensor stream, auto-cleaning malformed rows (the original is preserved as *_old_<ms>.csv and a cleaned file is rewritten).'''
         self.sensor_stream = self.__parse_full_sensor_stream(self.filename_with_path) # SensorData object
     
     def __parse_full_sensor_stream(self, path_to_file):

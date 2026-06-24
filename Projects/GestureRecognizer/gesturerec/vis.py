@@ -1,7 +1,26 @@
-import numpy as np 
-import matplotlib.pyplot as plt
+"""Plotting helpers for gesture signals and classification results (confusion
+matrices, bar graphs, and signal grids).
+"""
+import math
 import itertools
+import numpy as np
+import matplotlib.pyplot as plt
 from IPython.display import display_html
+
+
+def shift_array(arr, shift_amount, fill_value=np.nan):
+    '''Shifts arr by shift_amount (positive = right, negative = left), filling the
+       vacated slots with fill_value. Used by plot_signals_aligned.'''
+    result = np.empty_like(arr, dtype=float)
+    if shift_amount > 0:
+        result[:shift_amount] = fill_value
+        result[shift_amount:] = arr[:-shift_amount]
+    elif shift_amount < 0:
+        result[shift_amount:] = fill_value
+        result[:shift_amount] = arr[-shift_amount:]
+    else:
+        result[:] = arr
+    return result
 
 map_marker_to_desc = {
     ".":"point",
@@ -31,6 +50,7 @@ map_marker_to_desc = {
 plot_markers = ['o','v','^','<','>','s','p','P','*','h','X','D','d','|','_',0,1,2,3,4,5,6,7,8,9,10,'1','2','3','4',',']
 
 def plot_confusion_matrix(cm, classes, title, normalize=False, cmap=plt.cm.Blues, figsize=None):
+    '''Plots a confusion matrix cm with the given class labels and title. Set normalize=True to show row-normalized fractions.'''
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
         # print("Normalized confusion matrix")
