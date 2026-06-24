@@ -7,6 +7,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 from IPython.display import display_html
 
+# Okabe-Ito colorblind-safe qualitative palette. These eight colors stay
+# distinguishable under the common forms of color-vision deficiency
+# (deuteranopia, protanopia, tritanopia), so prefer them over the default
+# red/green/blue letter codes when a plot encodes categories by color.
+# Reference: Okabe & Ito, "Color Universal Design" (https://jfly.uni-koeln.de/color/).
+COLORBLIND_SAFE = [
+    "#000000",  # black
+    "#E69F00",  # orange
+    "#56B4E9",  # sky blue
+    "#009E73",  # bluish green
+    "#F0E442",  # yellow
+    "#0072B2",  # blue
+    "#D55E00",  # vermillion
+    "#CC79A7",  # reddish purple
+]
+
 
 def shift_array(arr, shift_amount, fill_value=np.nan):
     '''Shifts arr by shift_amount (positive = right, negative = left), filling the
