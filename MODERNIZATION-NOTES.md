@@ -3,7 +3,11 @@
 Report back to the `physcomp` textbook side (tracking issue **#116**). Living document;
 updated as the lesson-by-lesson pass proceeds.
 
-**Status:** Pass 1 (repo infrastructure) complete. Pass 2 (lesson-by-lesson) not started.
+**Status:** Pass 1 (repo infrastructure) complete. Pass 2 (lesson-by-lesson) in progress
+— notebooks 1 (IntroToPython), 2 (IntroToNumPy), 3 (IntroToMatplotlib), 4 (Quantization &
+Sampling), 5 (Comparing Signals), 6 (Frequency Analysis) done; 7 (StepTracker) code-complete;
+8 (GestureRec ShapeBased), 9 (GestureRec FeatureBased), 10 (Feature Selection) done — **all 10
+code-complete**. Remaining: the Colab-bootstrap sweep for NB4–10 (NB7 also pending it).
 **Date:** 2026-06-23.
 
 ---
@@ -38,9 +42,23 @@ updated as the lesson-by-lesson pass proceeds.
 - **Binder** builds from `environment.yml`/`requirements.txt` and checks out the full
   repo, so data + helper imports work there once these changes are pushed.
 - **Colab** loads only the single notebook — it does **not** get the repo's data or the
-  `makelab`/`gesturerec` packages. Each notebook needs a small "Colab setup" bootstrap
-  cell (clone repo + `pip install -e .` + `cd` into the lesson folder). That is a **Pass 2**
-  per-notebook edit.
+  `makelab`/`gesturerec` packages. Each data/helper-dependent notebook needs a small "Colab
+  setup" bootstrap cell (clone repo + `pip install -e .` + `cd` into the lesson folder).
+  **Decision (with Jon, 2026-06-23): do this as a dedicated cross-cutting sweep AFTER the
+  code-modernization pass on all 10**, not interleaved — because (a) the bootstrap clones from
+  GitHub `master`, so it can only be truly validated post-push; (b) one sweep keeps the near-
+  identical cells uniform; (c) clean separation of "runs on modern stack" vs "runs in Colab".
+  Covers **NB4, 5, 6, 7, 8, 9, 10** (NB1–3 need no data; NB3 already has its own ipympl/widget
+  Colab guard). Proposed guarded, idempotent pattern (no-op outside Colab), as the first code cell:
+  ```python
+  import sys, os
+  if 'google.colab' in sys.modules:
+      if not os.path.exists('signals'):
+          !git clone -q https://github.com/makeabilitylab/signals.git
+      %pip install -q -e signals
+      os.chdir('signals/<lesson folder>')   # e.g. Tutorials  or  Projects/StepTracker
+  ```
+  **Status: not started** (begins after NB8–10 code work).
 - **Not yet verifiable:** badges can only be confirmed to actually launch *after* these
   commits are pushed to `master` on GitHub. Flagging so we verify post-push, not assume.
 
@@ -74,7 +92,9 @@ breakages* (need code fixes).
 | 10 | Feature Selection & Hyperparam | ❌ | `TypeError: unhashable type: 'StringArray'` | pandas/seaborn/sklearn churn around string-dtype columns. Also `np.bool`→`bool`. Real bug. |
 
 ### Cross-cutting fixes confirmed present in the corpus
-- `np.bool` — **5 occurrences** (notebooks 9 and 10). Removed in NumPy ≥1.24 → `bool`.
+- `np.bool` — **5 occurrences** (notebooks 9 and 10). ⚠️ **Update:** `np.bool` was removed in
+  NumPy 1.24 but **re-added as an alias in NumPy 2.0**, so on our 2.4 stack it is NOT broken.
+  Changed to builtin `bool` anyway for clarity/consistency (a style fix, not a bug fix).
 - `%matplotlib notebook` — **6 occurrences** (notebooks 3 and 9). Broken in Notebook 7 /
   JupyterLab / Colab → `%matplotlib inline` (or `widget` where interaction is needed).
 - `sklearn.externals` — searched, **not** present (no action).
@@ -83,6 +103,229 @@ breakages* (need code fixes).
 
 ---
 
+## Community PRs
+
+- **PR #2** (Kartik Patil / @ARcKP98, 2024-03-10) — "Add instructions on using import" to
+  `IntroToPython.ipynb`. *Content is on-point* (fulfills the notebook's own import TODO) but the
+  PR itself is **superseded** by the v2 rewrite (conflicts after our branch lands) and has minor
+  quality issues (typos "importinhg"/"randomn_number"; bumps metadata to Python 3.10, behind our
+  3.12). **Disposition:** carried the idea forward as a fresh, modernized "Importing libraries"
+  section in our v2 notebook; credit Kartik via `Co-authored-by:` on the commit; then close PR #2
+  with a warm thank-you. _Awaiting Jon's go-ahead to post the close (acts under his GitHub account)._
+
 ## Per-notebook status (Pass 2)
 
-_Not started — to be filled in as each notebook is modernized (1 → 10)._
+### 1. IntroToPython — ✅ done (2026-06-23)
+- **Real bug fixed:** converted the remaining Python-2 `print` statements to `print(...)`
+  calls — 6 in the string-methods cell, plus 2 each in the three set-operations cells
+  (10 statements across 4 cells). These were the `SyntaxError` blocker; ironic given the
+  notebook's own changelist already claims "Updated all examples to Python 3."
+- **Intentional-error cells tagged:** the `KeyError: 'monkey'` dict-lookup cell and the
+  `t[0] = 1` tuple-immutability cell were tagged `raises-exception` so Restart-&-Run-All
+  completes for the rendered reading copy (same treatment notebooks 2 and 5 need).
+- **Re-executed in place** on the 3.12 stack — clean exit 0, every cell's output now
+  matches its Python-3 source. No data loading / helper imports, so **no Colab bootstrap
+  cell is needed** for this notebook.
+- **Added a modernized "Importing libraries" section** (2026-06-23) fulfilling the notebook's
+  own "Future TODOs" item (and removed that TODO line). Crisp: `import` + dot notation,
+  `from x import y`, `import numpy as np` aliasing, plus the PEP-8 "imports at top" convention;
+  f-strings, official-doc links, no bloat. This **carries forward community PR #2** (Kartik
+  Patil / @ARcKP98) which targeted the same TODO — see PR disposition below. Credit will be a
+  `Co-authored-by:` trailer on the commit, not an in-notebook note.
+
+### 2. IntroToNumPy — ✅ done (2026-06-23)
+- **No code bugs** — the blocker was purely the intentional `np.array(1,2,3,4)` error demo.
+- **Intentional-error cells tagged:** *two* cells, not one — the `np.array(1,2,3,4)` cell
+  **and** the shape-mismatch `x - y` (shapes `(5,)` vs `(3,)`) cell further down. The second
+  would have become the next blocker once the first was tagged. Both tagged `raises-exception`.
+- **numpy-2.4 behavior note:** `np.array(1,2,3,4)` now raises **`TypeError`** ("takes from 1
+  to 2 positional arguments…"), not the old `ValueError: only 2 non-keyword arguments accepted`.
+  Pedagogy is unaffected — the prose above the cell just says "will throw an exception."
+- The one-off zmq kernel-death the baseline sweep saw here did **not** reproduce (confirmed flake).
+- **Re-executed in place** — clean exit 0. Imports only numpy; no data/helper imports, so **no
+  Colab bootstrap cell needed.**
+
+### 3. IntroToMatplotlib — ✅ done (2026-06-23)
+- **Interactive backend modernized:** `%matplotlib notebook` (the dead nbagg backend, removed
+  in Notebook 7 / JupyterLab) → **`%matplotlib widget`** (ipympl, already pinned at 0.10.0 in
+  Pass 1). Rewrote the "Making the plots interactive using magic!" markdown to explain the
+  modern backend story (`inline` vs `widget`), call out that `notebook` is gone, and note the
+  Colab `enable_custom_widget_manager()` step.
+- **Static-render safety:** re-executed headless (clean exit 0). ipympl saves a mime-bundle of
+  `widget-view+json` + `text/html` + `image/png`. **Committed only the `image/png` fallback**
+  (stripped `widget-view+json` and `text/html`, and removed the nb-level `metadata.widgets`
+  state store). Reason: a widget-aware static renderer (nbviewer) would otherwise pick the saved
+  widget-view and show a **broken "widget state not found" placeholder** with no live kernel.
+  With png-only, every static surface shows a clean image; interactivity regenerates when a
+  reader actually runs the cell in Binder/Colab/local.
+- **Size:** 0.6 MB → 1.9 MB after naive execution → **0.9 MB** after the strip (21 consistent
+  static PNGs; the old version had one 274 KB nbagg JS blob).
+- No other code bugs; imports numpy/matplotlib/random only — no data/helper imports.
+
+### 4. Signals - Quantization and Sampling — ✅ done (2026-06-23)
+- **Real bug fixed (the blocker):** `librosa.display.waveplot` → **`waveshow`** (renamed/removed
+  in librosa ≥0.10). Cell 73.
+- **Latent bug fixed:** cell 5 called a bare `convert_to_mono(...)` that is **undefined** in the
+  notebook namespace (it lives in `makelab.audio`). Qualified to `makelab.audio.convert_to_mono(...)`,
+  matching the `makelab.signal.*` style used throughout. The default file is mono so the branch is
+  never taken with stock data — but it's a `NameError` waiting for anyone who swaps in a stereo file
+  (and the comment invites exactly that).
+- **Non-issue checked & dismissed:** `sp.io.wavfile` resolves fine on scipy 1.18 (lazy submodule
+  loading) — no explicit `import scipy.io` needed.
+- **Verified clean:** full headless Restart-&-Run-All → exit 0.
+- **Committed as a minimal diff (see policy below):** 11 insertions / 15 deletions; file stays ~12.9 MB
+  (orig 12.8 MB) instead of ballooning to 19 MB from a full-output rewrite.
+
+### 5. Signals - Comparing Signals — ✅ done (2026-06-23)
+The baseline sweep stopped at the intentional error (cell 11) and **masked several real
+breakages after it**. Found and fixed all of them:
+- **Intentional-error cell tagged** `raises-exception` (cell 11: `distance.euclidean` on
+  mismatched-length arrays — the documented blocker).
+- **Real bug — matplotlib:** `axes.stem(..., use_line_collection=True)` ×2. That kwarg was
+  **removed in matplotlib 3.9** → `TypeError` on 3.11. Removed it (it's now the default behavior).
+- **Real bug — wrong module:** cell 41 called `makelab.audio.plot_signal`, but `plot_signal`
+  lives only in `makelab.signal` → `AttributeError`. Fixed (cell 40 already did it right).
+- **Real bug — unmaintained/broken dep:** `from fastdtw import fastdtw`. fastdtw isn't pinned,
+  and even when installed it's **broken on the modern stack** — its `dist=distance.euclidean`
+  passes scalars to scipy's `euclidean`, which now rejects 0-d input (`AxisError`). **Decision
+  (with Jon): migrate to `librosa.sequence.dtw`** (already a pinned dep — drops the abandoned
+  library with *zero* new dependencies). Rewrote the code cell + the stale "## FastDTW" markdown
+  section (now "## DTW with librosa") + the "we use fastdtw below" line in the intro. **NB8
+  (GestureRec ShapeBased) mentions fastdtw too — handle there.** *(Resolved: NB8 only had a
+  markdown recommendation + a student stub, no fastdtw code to migrate — see NB8 entry.)*
+- **Correctness/modernization:** 9× `bshift_method is 'all'` (and friends) — `is` with string
+  literals (raises `SyntaxWarning`, semantically wrong identity-vs-equality) → `==`.
+- **Readability:** cell 48 had `&lt;`/`&gt;` HTML entities in a code comment → real `<`/`>`
+  operators, and split a run-on comment onto two lines.
+- **Readability:** de-collided imports — `from scipy import signal` + `from makelab import
+  signal` rebind the same name; switched to `import scipy.signal` / `import makelab.signal` /
+  `import makelab.audio` (submodule imports, no shadowing; all call sites are fully-qualified).
+- **Verified:** full headless run → exit 0 (only error is the tagged cell 11). Committed the
+  fresh re-exec (1.6 → 2.3 MB; substantive multi-cell change on a small file justifies it, vs
+  NB4's minimal-diff).
+
+### 6. Signals - Frequency Analysis — ✅ done (2026-06-23)
+Genuinely close to clean (baseline ✅). Big notebook (106 cells, audio + many plots, ~6 MB).
+- **Pre-existing uncommitted churn** (present at session start) was benign metadata only — a
+  Jupyter open/save had bumped the py-version string / kernel name / `nbformat_minor` and dropped
+  some `"scrolled"` cell metadata. No content to preserve.
+- **Real bug:** cell 5 `if i + 1 is not len(freqs):` — `is not` comparing **integers** (works only
+  by small-int caching; raises `SyntaxWarning`) → `!=`.
+- **Readability / dead imports:** de-collided the scipy/makelab `signal` shadowing (→
+  `import scipy.signal` / `import makelab.signal`) and removed two **unused** imports
+  (`scipy.spatial.distance`, `makelab.audio` — verified 0 call sites) plus a "matplot lib" typo.
+- **Widget note:** uses `ipywidgets.FloatProgress` (a progress bar during the brute-force
+  cross-correlation DFT) — works fine on ipywidgets 8.x; no change needed.
+- **Verified + committed minimal:** full headless re-exec → exit 0 (confirmed on the 3.12 stack),
+  but since both edits touch only a function def / the import cell (**no output changes**), I
+  committed HEAD outputs + the 2 source edits + modern kernel metadata. Diff is 6/9 lines, file
+  stays 5.9 MB (a full re-exec would have churned it to 9.5 MB / 2,100 lines for nothing).
+
+### 7. StepTracker — Exercises + WithExampleSolution — ✅ code-complete (2026-06-23)
+- **No code bugs.** Both the Exercises and the example-solution notebook are small (27/24
+  cells) and run clean on the 3.12 stack (verified Exercises headless → exit 0).
+- Checked and dismissed: the `.append(` is a **list** append (`peak_locations.append(...)`),
+  not pandas `df.append()`; `from scipy import signal` is genuinely used (6 bare `signal.`
+  calls, no makelab collision here) so it stays.
+- **Colab data-loading pending the sweep** (below): both load `Logs/` via a repo-relative path.
+- No file committed — left at HEAD (no source changes); the verification re-exec was discarded
+  to avoid churning plot PNGs for nothing.
+
+### 8. GestureRecognizer-ShapeBased — ✅ done (2026-06-23)
+The baseline's diagnosis was slightly off: the notebook gets **past** cell 23 (it uses
+`selected_gesture_set`, which resolves to Jon's set fine). Running it surfaced the real chain:
+- **Real blocker:** cell 32 hard-coded `get_gesture_set_with_str(map_gesture_sets, "Easy")`, but
+  there is **no "Easy" gesture set** in the repo (data is participant-named: `JonGestures`, …) →
+  returned `None` → `NoneType … map_gestures_to_trials` in `generate_kfolds_scikit`. Fixed to reuse
+  `selected_gesture_set` (already chosen in cell 7), which is always valid + matches the narrative.
+- **Real bug — sklearn:** cell 49 `confusion_matrix(y_true, y_pred, labels)` → modern sklearn's
+  `@validate_params` makes `labels` **keyword-only** → `TypeError: too many positional arguments`.
+  Fixed to `labels=labels`.
+- **Stale advice (NOT a code dep):** `fastdtw` appears only in a **markdown** cell recommending
+  students `pip install fastdtw` for DTW. `find_closest_match_dtw` is just a student stub
+  (`print("Implement this")`) — **there is no fastdtw import here.** Repointed the advice to
+  `librosa.sequence.dtw` (consistent with NB5; works on the modern stack). *(Correction to an
+  earlier note: NB8 did NOT need a fastdtw→librosa code migration — only the prose.)*
+- No `is`-identity antipatterns in code (all such hits were comments/docstrings).
+- **Verified:** used `--allow-errors` to surface ALL failures in one pass (only those two), then a
+  final clean run → exit 0, valid, 0 errors. Runs **end-to-end for the first time** on the new
+  stack; reproducible (Jon's set resolves deterministically, k-folds `seed=5`).
+- **Size flag:** 6.7 MB → **14 MB** (13 MB of plot PNGs — the per-gesture/per-trial viz + experiment
+  confusion matrices). The old 6.7 MB was a *broken partial* state. Committed the full working
+  version; **candidate for a later media-slimming pass** (e.g. lower inline DPI, or cap displayed
+  trials) if repo size matters.
+
+### 9. GestureRecognizer-FeatureBased — ✅ done (2026-06-23)
+Big notebook (162 cells). All the baseline-predicted bugs were real, plus the widget treatment:
+- **pandas 2.0 — `df.append()` removed (2×):** modernized to the recommended idiom rather than a
+  literal `pd.concat` swap:
+  - cell 64 (builds the feature table row-by-row from `features` dicts) → collect into a `rows`
+    list, then `df = pd.DataFrame(rows)` once (drops the old `if df is None` special-case).
+  - cell 154 (accumulates 1-row test DataFrames) → `test_rows` list + a single `pd.concat`
+    (also avoids the empty-DataFrame-concat `FutureWarning` and the O(n²) repeated-append).
+  - (All other `.append(` in the notebook are list appends — left alone.)
+- **numpy ≥1.24 — `np.bool` removed (2×):** cells 73, 75 (`dtype=np.bool`, `.astype(np.bool)`) → `bool`.
+- **`%matplotlib notebook` → `widget` (2×):** cells 56, 58 are the **interactive 3D feature-combo
+  plots** — exactly where rotate/zoom matters. Applied the NB3 pattern (guarded Colab ipympl +
+  `enable_custom_widget_manager` on cell 56, `%matplotlib widget` on cell 58). Cell 61 already
+  resets to `inline` afterward. Committed **png-only** for the widget figures (same static-render
+  safety as NB3) and dropped a leftover transient `IntProgress` progress-bar widget output (cell 38)
+  that had no png fallback (would've shown a broken widget placeholder).
+- **Checked & clean:** all `confusion_matrix(...)` calls already pass `labels=` as a keyword (no
+  NB8-style positional bug); `get_gesture_set_with_str` uses real names (Jon/Justin), no "Easy" issue.
+- **Verified:** `--allow-errors` full run → **0 errors** across all 162 cells; final clean run → exit 0,
+  valid. Runs **end-to-end for the first time** (the `df.append` at the feature table previously
+  halted it). Size 8.8 → 14 MB (plot-heavy incl. a 1500×6600 110-axes figure); old size was a broken
+  partial. Same media-slimming candidate note as NB8.
+
+### 10. Feature Selection and Hyperparameter Tuning — ✅ done (2026-06-23)
+113 cells. The baseline's `StringArray` blocker was real, but in a different spot than the
+`np.bool`/`df.corr()` I first suspected — found the true cause by running `--allow-errors`:
+- **Real blocker (`TypeError: unhashable type: 'StringArray'`, cells 36 & 41):** `df[filtered_df.columns.values] = scaler.fit_transform(...)`. In pandas 2.x the column index has **string dtype**, so `.columns.values` is a (StringArray) extension array, which is unhashable and fails as a multi-column setitem key. Fixed to `.columns.tolist()` (plain list of str).
+- **Correctness bug (cell 41):** the MinMax-scaler section displayed `normalized_df_standard_scaler` (copy-paste from the StandardScaler cell) → now displays `normalized_df_minmax_scaler`.
+- **`np.bool` (cells 4, 29, 31):** changed to builtin `bool` for clarity/consistency — **but note it was NOT actually broken**: numpy 2.0 *re-added* `np.bool` as an alias, so it works on our 2.4 stack. (Corrects the baseline's "np.bool removed" assumption — see cross-cutting note.)
+- **Checked & clean:** `df.corr()` (cells 4, 25, 31) runs fine (the df is numeric there); `get_gesture_set` uses "Jon"; cell-13 appends are list appends.
+- **Verified:** `--allow-errors` → 0 errors across 113 cells; clean run → exit 0, valid. Runs
+  end-to-end (was blocked at cell 36 before). 1.4 → 2.5 MB (modest; seaborn heatmaps).
+
+**🎉 All 10 notebooks are code-complete.** Remaining: the Colab-bootstrap sweep (NB4–10).
+
+---
+
+## Cross-cutting: minimal-diff policy for media-heavy notebooks (decided 2026-06-23)
+
+The audio notebooks (4 Quantization, and likely 5 Comparing Signals, 6 Frequency Analysis,
+7 StepTracker) embed **large base64 audio players** (`IPython.display.Audio` → `text/html`) and
+dozens of plot PNGs — NB4 alone is ~13 MB. A full Restart-&-Run-All **verifies** correctness but,
+if committed wholesale, churns 40+ binary PNG outputs and inflates the file (NB4: 12.8 → 19 MB).
+
+**Policy:** for these heavy notebooks, *verify* with a full headless run, but *commit* a minimal
+diff — restore the pristine outputs and refresh only the cells whose code actually changed. Keeps
+diffs reviewable and repo size flat. (For the small tutorial notebooks 1–3 a full re-exec is fine.)
+
+---
+
+## Cross-cutting: interactive-plot strategy (decided 2026-06-23, applies to NBs 3 & 9)
+
+`%matplotlib notebook` is **removed** in modern Jupyter — every occurrence becomes
+`%matplotlib widget` (ipympl). Rationale and the rendering contract:
+- **No static page can be truly interactive** (no live kernel) — interactivity is delivered only
+  via the reader opening Binder/Colab/local Jupyter. `widget` is the only maintained backend that
+  serves that path; the dead `notebook` magic gives nothing.
+- **Commit png-only** for widget cells (strip `widget-view+json` + `text/html`, drop nb-level
+  `metadata.widgets`). Static renderers → clean PNG; live re-run → full interactivity. Also keeps
+  file size sane.
+- **Colab** needs `from google.colab import output; output.enable_custom_widget_manager()` (and
+  ipympl installed) for live interactivity. **Decided with Jon (option A):** bake a *guarded*
+  Colab-enable block into the interactive notebooks so Colab "just works." Pattern (no-op off
+  Colab), placed immediately before the `%matplotlib widget` magic:
+  ```python
+  import sys
+  if 'google.colab' in sys.modules:
+      %pip install -q ipympl
+      from google.colab import output
+      output.enable_custom_widget_manager()
+
+  %matplotlib widget
+  ```
+  ✅ Implemented in NB 3. **TODO: apply the same block to NB 9** when it's modernized.
