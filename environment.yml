@@ -21,6 +21,7 @@ dependencies:
   - notebook=7.6.*
   - ipykernel=7.3.*
   - ipympl=0.10.*
+  - ipywidgets=8.1.*   # interactive sliders (@interact); also a transitive dep of ipympl
   - pip
   # Install the local makelab + gesturerec helper packages (pyproject.toml)
   - pip:
