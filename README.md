@@ -1,17 +1,22 @@
 # Signals: Applied Signal Processing & ML Notebooks
 
+[![CI](https://github.com/makeabilitylab/signals/actions/workflows/ci.yml/badge.svg)](https://github.com/makeabilitylab/signals/actions/workflows/ci.yml)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+[![Textbook: Physical Computing](https://img.shields.io/badge/textbook-Physical%20Computing-8A2BE2)](https://makeabilitylab.github.io/physcomp/)
+
 Hands-on Jupyter notebooks for **applied signal processing and time-series
 classification** in human–computer interaction and ubiquitous computing — covering
 sampling and quantization, comparing signals in the time domain, frequency analysis
 (DFT/FFT/STFT), and two complete accelerometer projects (step tracking and gesture
 recognition).
 
-These notebooks are the **source of truth** for the *Signals* module of the
-[Physical Computing interactive textbook](https://makeabilitylab.github.io/physcomp/signals/).
-The textbook links to and renders them; this repository is where they are maintained,
-mirroring how the textbook treats [`makeabilitylab/arduino`](https://github.com/makeabilitylab/arduino).
-They were developed for, and refined across several offerings of, a graduate
-ubiquitous-computing course at the University of Washington.
+> 📖 **These notebooks power the _Signals_ module of the [Physical Computing interactive textbook](https://makeabilitylab.github.io/physcomp/signals/).**
+> Read the rendered lessons in the textbook — [textbook home](https://makeabilitylab.github.io/physcomp/) · [textbook source](https://github.com/makeabilitylab/physcomp).
+> This repository is the **source of truth** where the notebooks are maintained, mirroring how the textbook treats [`makeabilitylab/arduino`](https://github.com/makeabilitylab/arduino).
+
+Developed for, and refined across several offerings of, a graduate ubiquitous-computing
+course at the University of Washington.
 
 ## Lessons
 
@@ -36,6 +41,19 @@ cloud (no install) with the badges, or run locally (see [Setup](#setup)).
 > notebook in the lesson-modernization pass) handles that. Binder builds a full
 > environment from `environment.yml`/`requirements.txt` and checks out the whole repo,
 > so data and imports work there without extra steps.
+
+## Who this is for & how to use
+
+**Students / self-learners.** Work through the lessons in order (cloud badges above, or
+[run locally](#setup)). Each notebook keeps its exercise prompts and *"your turn"* cells
+**and** shows a worked **`### Example solution`** right below them — so you can attempt
+each exercise first, then check your approach against a model answer.
+
+**Instructors.** The notebooks are complete, runnable teaching artifacts you can lecture
+from directly. The original student-template TODOs are now answered inline (see
+[#6](https://github.com/makeabilitylab/signals/issues/6)); planning fresh graded work is
+tracked in [#28](https://github.com/makeabilitylab/signals/issues/28). Instructor-only
+answer keys (`*-Private.ipynb`) remain unpublished (gitignored).
 
 ## Setup
 
@@ -112,10 +130,34 @@ see [`.github/workflows/`](.github/workflows/).
 └── environment.yml               # pinned conda environment
 ```
 
-Some notebooks ship as an exercise/solution pair (`*-Exercises.ipynb` for students,
-`*-WithExampleSolution.ipynb` as the answer key). Instructor-only solution keys
-(`*-Private.ipynb`) are intentionally not published.
+The notebooks are **complete teaching artifacts**: each keeps its exercise prompts and
+*"your turn"* cells and adds a labeled `### Example solution` with worked code right below
+(see [#6](https://github.com/makeabilitylab/signals/issues/6)). Instructor-only answer
+keys (`*-Private.ipynb`) are intentionally not published.
+
+## Contributing
+
+Bug reports, fixes, and improvements are welcome — please open an
+[issue](https://github.com/makeabilitylab/signals/issues) or pull request. Run the
+[tests](#tests) before submitting. These notebooks are written to be **read by
+students**, so favor clear, well-commented, explanatory code over terse cleverness.
+
+## Citing
+
+If you use these materials in teaching or research, please cite the textbook:
+
+```text
+Jon E. Froehlich and the Makeability Lab. "Signals: Applied Signal Processing & ML."
+Physical Computing interactive textbook, University of Washington.
+https://makeabilitylab.github.io/physcomp/signals/
+```
+
+## Acknowledgments
+
+Created by [Jon E. Froehlich](https://jonfroehlich.github.io/) and the
+[Makeability Lab](https://makeabilitylab.cs.washington.edu/) at the University of
+Washington, with contributions from course staff and students.
 
 ## License
 
-See [LICENSE](LICENSE).
+[MIT](LICENSE) © 2020 UW Makeability Lab.
